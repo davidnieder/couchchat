@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>User Status - CouchChat</title>
+
+    <link rel="stylesheet" href="normalize.css" type="text/css">
+    <link rel="stylesheet" href="skeleton.css" type="text/css">
+    <link rel="stylesheet" href="auth.css" type="text/css">
+
+    <script>
+      var couchchat = {status:true};
+    </script>
+    <script src="/_utils/script/jquery.js"></script>
+    <script src="/_utils/script/jquery.couch.js"></script>
+    <script src="auth.js"></script>
+
+  </head>
+  <body>
+    <div id="container" class="container">
+      <div id="no-javascript">
+        <noscript>
+          This application requires javascript.
+        </noscript>
+      </div>
+
+      <div id="status-view" class="row login-view">
+        <div class="offset-by-three six columns">
+          <div id="status-message" class="login-error">
+            Your account awaits activation by an administrator
+          </div>
+          <div class="status-field">Logged-in: <span id="status-login"><img src="loading.svg"></span></div>
+          <div class="status-field">Name: <span id="status-username"><img src="loading.svg"></span></div>
+          <div class="status-field">Status: <span id="status-userrole"><img src="loading.svg"></span></div>
+        </div>
+      </div>
+
+    </div>
+  </body>
+  <script>
+    $(document).ready(function() {
+      couchchat.status.init();
+      couchchat.status.show();
+    });
+  </script>
+</html>
