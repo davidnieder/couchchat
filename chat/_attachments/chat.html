@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>CouchChat</title>
+
+    <link rel="stylesheet" href="normalize.css" type="text/css">
+    <link rel="stylesheet" href="skeleton.css" type="text/css">
+    <link rel="stylesheet" href="chat.css" type="text/css">
+  </head>
+  <body>
+    <div id="container" class="container">
+      <div id="no-javascript">
+        <noscript>
+          This application requires javascript.
+        </noscript>
+      </div>
+
+      <div id="loading-view">
+          <img src="loading.svg">
+      </div>
+
+      <div id="main-view">
+        <div id="header" class="row">
+          <span id="user-links">
+            <a href="#" id="settings-link"><strike>Settings</strike></a> |
+            <a href="#" id="logout-link">Logout</a>
+          </span>
+          <span class="u-pull-right">
+            <a href="#" id="user-list-link"><strike>User List</strike></a>
+          </span>
+        </div>
+  
+        <div id="message-view" class="row">
+        </div>
+  
+        <div id="footer" class="row">
+          <form>
+            <input type="text" id="message-input" autocomplete="off"
+              placeholder="Write a message or paste a url &hellip;">
+            <input type="submit" id="message-send" value="Send"
+              class="button-primary u-pull-right">
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </body>
+  <script src="/_utils/script/jquery.js"></script>
+  <script src="jquery.couch.custom.js"></script>
+  <script src="mustache.js"></script>
+  <script src="templates.js"></script>
+  <script src="chat.js"></script>
+  <script>
+  $(document).ready(function()  {
+    couchchat.init();
+  });
+  </script>
+</html>

@@ -5,8 +5,8 @@ function(doc, req)  {
     /* redirect to chat */
     return {
       code: 302,
-      headers: {Location: '/couchchat_chat/_design/chat/index.html'},
-      body: 'see /couchchat_chat/_design/chat/index.html'
+      headers: {Location: '/couchchat_chat/_design/chat/chat.html'},
+      body: 'see /couchchat_chat/_design/chat/chat.html'
     };
   }
   else if (req.userCtx.name &&
