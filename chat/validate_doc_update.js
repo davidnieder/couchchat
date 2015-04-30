@@ -23,7 +23,7 @@ function(newDoc, oldDoc, userCtx, secObj) {
 
     require('message');
     require('user');
-    require('timestamp');
+    require('time');
 
     if (newDoc.user != userCtx.name)  {
       throw({forbidden: 'uncool dude!'});
