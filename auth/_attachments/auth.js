@@ -1,8 +1,9 @@
 var setPosition = function($container, divider) {
   divider = divider ? divider : 1;
   var height = $(window).height();
-  $container.css('margin-top',
-      (height/divider)-($container.height()/2));
+  var margin = height/divider - $container.height()/2;
+  margin = margin<2 ? 2 : margin;
+  $container.css('margin-top', margin);
 };
 
 /* couchchat.login */
