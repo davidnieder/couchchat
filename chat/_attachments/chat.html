@@ -21,20 +21,30 @@
       </div>
 
       <div id="main-view">
-        <div id="header" class="row">
+        <div id="header" class="row element-container">
+          <span id="welcome-message"></span>
           <span id="user-links">
-            <a href="#" id="settings-link"><strike>Settings</strike></a> |
+            <a href="#" id="settings-link">Settings</a> |
             <a href="#" id="logout-link">Logout</a>
           </span>
           <span class="u-pull-right">
-            <a href="#" id="user-list-link"><strike>User List</strike></a>
+            <a href="#" id="user-list-link">User List</a>
           </span>
         </div>
-  
-        <div id="message-view" class="row">
+
+        <div id="settings" class="row element-container">
+          <span class="u-pull-right"><a href="#" id="close-settings-link">close</a></span>
+          <span><p>Settings: comming soon &hellip;</p></span>
         </div>
-  
-        <div id="footer" class="row">
+
+        <div id="user-list" class="row element-container u-pull-right">
+          <span>User List: comming soon</span>
+        </div>
+
+        <div id="message-view" class="row element-container">
+        </div>
+
+        <div id="footer" class="row element-container">
           <form>
             <input type="text" id="message-input" autocomplete="off"
               placeholder="Write a message or paste a url &hellip;">
@@ -46,14 +56,10 @@
 
     </div>
   </body>
-  <script src="/_utils/script/jquery.js"></script>
+  <script src="jquery.min.js"></script>
   <script src="jquery.couch.custom.js"></script>
   <script src="mustache.js"></script>
   <script src="templates.js"></script>
   <script src="chat.js"></script>
-  <script>
-  $(document).ready(function()  {
-    couchchat.init();
-  });
-  </script>
+  <script>$(document).ready(couchchat);</script>
 </html>

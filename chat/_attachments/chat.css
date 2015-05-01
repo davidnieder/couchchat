@@ -1,3 +1,15 @@
+html, body  {
+  overflow: hidden;
+}
+
+.element-container {
+  background-color: #F8F8F8;
+  border: 2px solid #D1D1D1;
+  border-radius: 5px;
+  padding: 0 1rem;
+  margin-top: .5rem;
+}
+
 #no-javascript  {
   color: #f00;
   font-size: 110%;
@@ -9,34 +21,35 @@
   text-align: center;
 }
 
+#user-list  {
+  margin-left: .5rem;
+  max-width: 15%;
+  display: none;
+}
+
+#settings  {
+  display: none;
+}
+
 #main-view  {
   display: none;
 }
 #header {
   line-height: 30px;
-  background-color: #F8F8F8;
-  border: 2px solid #D1D1D1;
-  border-radius: 5px;
-  margin-top: .5rem;
-}
-#header span  {
-  margin: 0 1rem;
 }
 
 #message-view  {
-  margin: .5rem auto .5rem;
-  background-color: #F8F8F8;
-  border: 2px solid #D1D1D1;
-  border-radius: 5px;
-  padding-top: .5rem;
   overflow: auto;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
 .message-bubble  {
   border: thin solid gray;
   border-radius: 8px;
-  margin: .6rem 1rem;
   padding: .4rem 1rem;
+  margin-bottom: .6rem;
   max-width: 60%;
+
   /*background-color: #F7E285;*/
   /*background-color: #94CB54;*/
   /*background-color: #FC4E4E;*/
@@ -48,7 +61,6 @@
 }
 .message-bubble-body {
   font-size: 105%;
-  text-align: left;
 }
 .message-not-acked  {
   background-color: #DCDCDC;
@@ -73,9 +85,6 @@
 }
 
 #footer {
-  background-color: #F8F8F8;
-  border: 2px solid #D1D1D1;
-  border-radius: 5px;
   margin-bottom: 1rem;
 }
 #footer form  {
