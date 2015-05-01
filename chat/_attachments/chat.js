@@ -240,6 +240,12 @@ var couchchat = function()  {
       return main;
     })();
 
+    ui.init = function()  {
+      ui.loadingView.hide();
+      ui.main.init();
+      ui.main.show();
+    };
+
     return ui;
   })(jQuery);
 
@@ -252,15 +258,17 @@ var couchchat = function()  {
 
     var init = function() {
       getSession();
-      $.couch.db(chatDb).changes(0, {'filter':'chat/messages'})
-        .onChange(messageListener);
     };
 
     var getSession = function() {
-      $.couch.session({async: false,
+      $.couch.session({
         success: function(resp) {
           if (resp.userCtx.name)  {
             models.userList.add(resp.userCtx.name, true);
+            getInitialMessages(10);
+
+            $.couch.db(chatDb).changes(0, {'filter':'chat/messages'})
+              .onChange(messageListener);
           }
           else  {
             /* user not logged-in */
@@ -311,9 +319,9 @@ var couchchat = function()  {
     var getInitialMessages = function(count) {
       $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time',
           {descending: true, limit: count}, {
-          async: false,
           success: function(resp)  {
             if (resp.total_rows)  {
+              messageController.init();
               /* messages are ordered descending. need to add them ascending */
               for (var i=resp.rows.length-1; i>=0; i--) {
                 var doc = { message: resp.rows[i].value.message,
@@ -416,7 +424,8 @@ var couchchat = function()  {
       Message = models.Message;
       messageMap = models.messageMap;
       user = models.userList.getPrimary();
-      net.getInitialMessages(10);
+
+      ui.init();
     };
 
     var newRemoteMessage = function(id, doc) {
@@ -452,10 +461,8 @@ var couchchat = function()  {
     };
   })();
 
+  /* net.init() -> getSession() -> getInitialMessages()
+   * -> messageController.init() -> ui.init()
+   */
   net.init();
-  messageController.init();
-
-  ui.loadingView.hide();
-  ui.main.init();
-  ui.main.show();
 };

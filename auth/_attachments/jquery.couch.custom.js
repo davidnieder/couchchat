@@ -24,7 +24,6 @@
       options = options || {};
       return ajax({
         type: "GET", url: this.urlPrefix + "/_session",
-        async: options.async==false ? false : true,
         beforeSend: function(xhr) {
             xhr.setRequestHeader('Accept', 'application/json');
         },
@@ -92,7 +91,6 @@
       options = options || {};
       return $.ajax({
         type: "DELETE", url: this.urlPrefix + "/_session", dataType: "json",
-        async: options.async==false ? false : true,
         username : "_", password : "_",
         beforeSend: function(xhr) {
             xhr.setRequestHeader('Accept', 'application/json');
