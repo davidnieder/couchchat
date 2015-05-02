@@ -1,3 +1,6 @@
+var welcomeString = ''
++ '<span id="welcome-message">Welcome {{user}}!</span>';
+
 var messageBubble = ''
 + '<div id="{{id}}" class="message-bubble u-cf {{float}}">'
 +   '<div class="message-bubble-head">{{name}} ({{time}}):</div>'

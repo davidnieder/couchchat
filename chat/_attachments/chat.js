@@ -61,10 +61,7 @@ var couchchat = function()  {
 
         var welcomeUser = function() {
           user = models.userList.getPrimary();
-          if (user) {
-            message = 'Welcome ' + user.name + '!';
-            $container.find('#welcome-message').prepend(message);
-          }
+          $container.prepend(Mustache.render(welcomeString, {user:user.name}));
         }
 
         return  {
