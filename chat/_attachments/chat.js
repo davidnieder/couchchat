@@ -286,17 +286,10 @@ var couchchat = function()  {
     };
 
     var sendMessage = function(message)  {
-      // TODO integrate in $.couch.custom.js
-      $.ajax({
-        url: newMessagePath,
-        type: 'POST',
-        dataType: 'json',
-        processData: false,
-        contentType: 'application/json',
-        data: JSON.stringify(message),
-        success: onSendMessageSuccess,
-        error: onNetError
-      });
+      $.couch.db(chatDb).update('chat/new_message', message, {
+          success: onSendMessageSuccess,
+          error: onNetError
+        });
     };
 
     var onSendMessageSuccess = function(resp) {

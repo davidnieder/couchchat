@@ -225,6 +225,22 @@
               },
               ajaxOptions, 'An error occurred accessing the list'
           );
+        },
+
+        update: function(update, doc, ajaxOptions)  {
+          var update = update.split('/');
+          var ajaxOptions = ajaxOptions || {};
+          $.extend(ajaxOptions, {successStatus: 201});
+          var type = 'POST';
+          var data = toJSON(doc);
+
+          return ajax({
+            type: type,
+            data: data,
+            url: this.uri + '_design/' + update[0] + '/_update/' + update[1]
+            },
+            ajaxOptions, 'An error occurred posting the update'
+          );
         }
       };
     },
