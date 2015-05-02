@@ -43,6 +43,17 @@ html, body  {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
+#load-earlier-messages  {
+  width: 100%;
+  text-align: center;
+  font-size: 95%;
+}
+#load-earlier-messages img  {
+  width: 23px;
+  height: 23px;
+  vertical-align: top;
+  display: none;
+}
 .message-bubble  {
   border: thin solid gray;
   border-radius: 8px;

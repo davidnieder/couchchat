@@ -122,6 +122,11 @@ var couchchat = function()  {
       /* chat messages */
       main.messageView = (function() {
         var $container = $('#message-view');
+        var $loadMore = $('#load-earlier-messages');
+
+        var init = function() {
+          $loadMore.find('a').first().click(onLoadMoreClicked);
+        };
 
         var getHeight = function(outerHeight) {
           return $container.outerHeight(outerHeight);
@@ -136,7 +141,7 @@ var couchchat = function()  {
               'slow');
         };
 
-        var addMessage = function(message, primary, isAcked)  {
+        var addMessage = function(message, primary, isAcked, isOld) {
           var template = isAcked ? messageBubble : messageBubbleTemporary;
           var float = primary ? 'u-pull-left' : 'u-pull-right';
           var time = message.time ? formatTime(message.time) : undefined;
@@ -145,8 +150,14 @@ var couchchat = function()  {
               {id:message.id, float:float, name:message.user,
                time:time, message:message.message});
 
-          $container.append(template);
-          scrollToBottom();
+          if (isOld)  {
+            $loadMore.after(template);
+            $loadMore.find('img').first().hide();
+            $loadMore.find('a').first().show();
+          } else {
+            $container.append(template);
+            scrollToBottom();
+          }
         };
 
         var messageAcked = function(message) {
@@ -160,17 +171,32 @@ var couchchat = function()  {
           /* returns 'HH:MM' */
           time = time.toLocaleTimeString();
           return time.substr(0, time.lastIndexOf(':'));
-        }
+        };
+
+        var onLoadMoreClicked = function(event)  {
+          event.preventDefault();
+          net.getOlderMessages(10);
+          $loadMore.find('a').first().hide();
+          $loadMore.find('img').first().show();
+        };
+
+        var noMoreOldMessages = function()  {
+          $loadMore.find('a').first().hide();
+          $loadMore.find('img').first().hide();
+          $loadMore.text('No more messages found.');
+        };
 
         var showError = function(error) {
         };
 
         return  {
+          init: init,
           getHeight: getHeight,
           setHeight: setHeight,
           scrollToBottom: scrollToBottom,
           addMessage: addMessage,
-          messageAcked: messageAcked
+          messageAcked: messageAcked,
+          noMoreOldMessages: noMoreOldMessages
         };
       })();
 
@@ -210,6 +236,7 @@ var couchchat = function()  {
 
       main.init = function() {
         this.header.init();
+        this.messageView.init();
         this.settings.init();
         this.messageInput.init();
 
@@ -307,10 +334,10 @@ var couchchat = function()  {
     };
 
     var getInitialMessages = function(count) {
-      $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time',
-          {descending: true, limit: count}, {
+      $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time', {
+          descending: true, limit: count}, {
           success: function(resp)  {
-            if (resp.total_rows)  {
+            if (resp.total_rows > 0)  {
               messageController.init();
               /* messages are ordered descending. need to add them ascending */
               for (var i=resp.rows.length-1; i>=0; i--) {
@@ -324,6 +351,25 @@ var couchchat = function()  {
             }
           },
           error: onNetError});
+    };
+
+    var getOlderMessages = function(count)  {
+      $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time', {
+        descending: true, startkey: models.earliestMessage, skip: 1,
+        limit: count}, {
+        success: function(resp) {
+          if (resp.total_rows > 0)  {
+            for (var i in resp.rows) {
+              var doc = { message: resp.rows[i].value.message,
+                          user: resp.rows[i].value.user,
+                          time: resp.rows[i].key };
+              messageController.newRemoteMessage(resp.rows[i].id, doc);
+            }
+          } else {
+            ui.main.messageView.noMoreOldMessages();
+          }
+        },
+        error: onNetError});
     };
 
     var messageListener = function(changes) {
@@ -350,6 +396,7 @@ var couchchat = function()  {
       sendMessage: sendMessage,
       getMessage: getMessage,
       getInitialMessages: getInitialMessages,
+      getOlderMessages: getOlderMessages,
       getUUID: getUUID
     };
   })(jQuery);
@@ -396,11 +443,13 @@ var couchchat = function()  {
     };
 
     var messageMap = {};
+    var earliestMessage = Number.MAX_SAFE_INTEGER;
 
     return  {
       userList: userList,
       Message: Message,
-      messageMap: messageMap
+      messageMap: messageMap,
+      earliestMessage: earliestMessage
     };
   })();
 
@@ -421,7 +470,13 @@ var couchchat = function()  {
     var newRemoteMessage = function(id, doc) {
       var msg = new Message(id, doc.message, doc.user, doc.time);
       var primary = msg.user == user.name ? true : false;
-      ui.main.messageView.addMessage(msg, primary, true);
+
+      if (msg.time.getTime() < models.earliestMessage)  {
+        models.earliestMessage = msg.time.getTime();
+        ui.main.messageView.addMessage(msg, primary, true, true);
+      } else {
+        ui.main.messageView.addMessage(msg, primary, true);
+      }
     };
 
     var onNewRemoteMessageAvailable = function(id) {
@@ -451,8 +506,10 @@ var couchchat = function()  {
     };
   })();
 
-  /* net.init() -> getSession() -> getInitialMessages()
-   * -> messageController.init() -> ui.init()
+  /*
+   * initial control flow:
+   * net.init() -> getSession() -> getInitialMessages() ->
+   * messageController.init() -> ui.init()
    */
   net.init();
 };
