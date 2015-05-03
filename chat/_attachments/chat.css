@@ -21,6 +21,13 @@ html, body  {
   text-align: center;
 }
 
+#error-view {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 105%;
+  display: none;
+}
+
 #user-list  {
   margin-left: .5rem;
   max-width: 15%;

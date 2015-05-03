@@ -19,6 +19,18 @@ var couchchat = function()  {
       };
     })();
 
+    ui.errorView = (function()  {
+      var $container = $('#error-view');
+      var show = function() {
+        ui.loadingView.hide();
+        $container.show();
+      };
+
+      return {
+        show: show
+      };
+    })();
+
     /* main (chat) view */
     ui.main = (function()  {
       var main = {};
@@ -332,7 +344,7 @@ var couchchat = function()  {
             redirect(authPath);
           }
         },
-        error: onNetError
+        error: onEarlyNetError
       });
     };
 
@@ -379,11 +391,13 @@ var couchchat = function()  {
                             time: resp.rows[i].key };
                 messageController.newRemoteMessage(resp.rows[i].id, doc);
               }
-            } else {
+            }
+            if (resp.total_rows < count) {
               ui.main.messageView.noMoreOldMessages();
             }
           },
-          error: onNetError});
+          error: onEarlyNetError }
+      );
     };
 
     var getOlderMessages = function(count)  {
@@ -421,6 +435,10 @@ var couchchat = function()  {
 
     var onNetError = function() {
       console.log('net error');
+    };
+
+    var onEarlyNetError = function()  {
+      ui.errorView.show();
     };
 
     return  {
