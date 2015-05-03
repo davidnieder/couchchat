@@ -1,6 +1,9 @@
 var welcomeString = ''
 + '<span id="welcome-message">Welcome {{user}}!</span>';
 
+var dateLine = ''
++ '<span class="date-line u-cf"><hr>{{date}}<hr></span>';
+
 var messageBubble = ''
 + '<div id="{{id}}" class="message-bubble u-cf {{float}}">'
 +   '<div class="message-bubble-head">{{name}} ({{time}}):</div>'

@@ -81,16 +81,11 @@ html, body  {
   width: 100%;
   text-align: center;
 }
-.date-line span {
-  margin: 0 2%;
-  vertical-align: middle;
-}
 .date-line hr {
-  width: 35%;
+  width: 15%;
   vertical-align: middle;
   display: inline-block;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
+  margin: .5rem 2rem;
   border-width: 0;
   border-top: 1px solid #000;
 }
