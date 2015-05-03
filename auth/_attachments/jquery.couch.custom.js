@@ -10,6 +10,9 @@
 // License for the specific language governing permissions and limitations under
 // the License.
 
+// Modified Version of couchdb-jquery-couch
+// https://github.com/apache/couchdb-jquery-couch
+
 (function($) {
 
   $.couch = $.couch || {};
