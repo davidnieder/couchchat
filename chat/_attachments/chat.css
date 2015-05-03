@@ -97,6 +97,12 @@ html, body  {
   border-top: 1px solid #000;
 }
 
+.error-message  {
+  font-size: 104%;
+  padding: 1rem 0;
+  color: #F00;
+}
+
 #footer {
   margin-bottom: 1rem;
 }

@@ -232,6 +232,13 @@ var couchchat = function()  {
         };
 
         var showError = function(error) {
+          if (error == 'sessionError')  {
+            $container.append(sessionError);
+            main.messageInput.disable();
+          } else {
+            $container.append(genericError);
+          }
+          scrollToBottom();
         };
 
         return  {
@@ -241,7 +248,8 @@ var couchchat = function()  {
           scrollToBottom: scrollToBottom,
           addMessage: addMessage,
           messageAcked: messageAcked,
-          noMoreOldMessages: noMoreOldMessages
+          noMoreOldMessages: noMoreOldMessages,
+          showError: showError
         };
       })();
 
@@ -263,6 +271,11 @@ var couchchat = function()  {
           $messageInputField.focus();
         };
 
+        var disable = function()  {
+          $messageInputField.prop('disabled', true);
+          $messageSendButton.prop('disabled', true);
+        };
+
         var newMessage = function(event) {
           event.preventDefault();
           if (!$messageInputField.val()) {
@@ -275,7 +288,8 @@ var couchchat = function()  {
         return  {
           init: init,
           height: height,
-          focus: focus
+          focus: focus,
+          disable: disable
         };
       })();
 
@@ -433,8 +447,15 @@ var couchchat = function()  {
       window.location.replace(window.location.origin + path);
     };
 
-    var onNetError = function() {
-      console.log('net error');
+    var onNetError = function(status, error, reason) {
+      if (status == 403)  {
+        /* forbidden */
+        ui.main.messageView.showError('sessionError');
+      }
+      // TODO handle more errors specifically
+      else {
+        ui.main.messageView.showError('unkownError');
+      }
     };
 
     var onEarlyNetError = function()  {

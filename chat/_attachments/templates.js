@@ -16,3 +16,15 @@ var messageBubbleTemporary = ''
 +   '<div class="message-bubble-body">{{message}}</div>'
 + '</div>';
 
+var sessionError = ''
++ '<div class="u-cf error-message">'
++   'Your session timed out. '
++   '<a href="">Log back in.</a>'
++ '</div>';
+
+var genericError = ''
++ '<div class="u-cf error-message">'
++   'A network error occurred. '
++   '<a href="">Try reloading this page.</a>'
++ '</div>';
+
