@@ -233,14 +233,21 @@
         update: function(update, doc, ajaxOptions)  {
           var update = update.split('/');
           var ajaxOptions = ajaxOptions || {};
-          $.extend(ajaxOptions, {successStatus: 201});
-          var type = 'POST';
           var data = toJSON(doc);
+          var type = 'POST';
+          var docId = '';
+
+          if (update[2])  {
+            type = 'PUT';
+            docId = update[2];
+          }
+          $.extend(ajaxOptions, {successStatus: 201});
 
           return ajax({
             type: type,
             data: data,
-            url: this.uri + '_design/' + update[0] + '/_update/' + update[1]
+            url: this.uri + '_design/' + update[0] + '/_update/' + update[1] +
+                 '/' + docId
             },
             ajaxOptions, 'An error occurred posting the update'
           );
