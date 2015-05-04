@@ -1,4 +1,4 @@
-function (doc, req)  {
+function(doc, req)  {
   var resp = function(id, time) {
     return {
       'headers': {
