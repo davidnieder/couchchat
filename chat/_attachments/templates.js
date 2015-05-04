@@ -16,6 +16,12 @@ var messageBubbleTemporary = ''
 +   '<div class="message-bubble-body">{{message}}</div>'
 + '</div>';
 
+var userListEntry = ''
++ '<div id="user-{{name}}">'
++   '<span style="color:{{color}}">{{name}}</span> '
++   '<span class="{{statusClass}}">{{status}}</span>'
++ '</div>';
+
 var sessionError = ''
 + '<div class="u-cf error-message">'
 +   'Your session timed out. '

@@ -1,10 +1,10 @@
 var couchchat = function()  {
 
-  /* couchchat.ui */
+  /* couchchat.ui {{{ */
   var ui = (function($) {
     var ui = {};
 
-    /* loading indicator */
+    /* loading indicator {{{ */
     ui.loadingView = (function() {
       var $container = $('#loading-view');
       var show = function() {
@@ -17,8 +17,9 @@ var couchchat = function()  {
       return  {
         hide: hide
       };
-    })();
+    })(); /* }}} */
 
+    /* error view {{{ */
     ui.errorView = (function()  {
       var $container = $('#error-view');
       var show = function() {
@@ -29,14 +30,14 @@ var couchchat = function()  {
       return {
         show: show
       };
-    })();
+    })(); /* }}} */
 
-    /* main (chat) view */
+    /* main (chat) view  {{{ */
     ui.main = (function()  {
       var main = {};
       var $container = $('#main-view');
 
-      /* chat header */
+      /* chat header {{{ */
       main.header = (function()  {
         var $container = $('#header');
         var $settingsLink = $('#settings-link');
@@ -80,8 +81,9 @@ var couchchat = function()  {
           init: init,
           height: height
         };
-      })();
+      })(); /* }}} */
 
+      /* settings view {{{ */
       main.settings = (function()  {
         var $container = $('#settings');
 
@@ -107,10 +109,37 @@ var couchchat = function()  {
           toggle: toggle,
           height: height
         };
-      })();
+      })(); /* }}} */
 
+      /* user list view {{{ */
       main.userList = (function()  {
         var $container = $('#user-list');
+
+        var init = function() {
+          update();
+          setInterval(update, 5000);
+        };
+
+        /* populates/updates the user-list div */
+        var update = function() {
+          var lastSeenList = models.userList.getLastSeenList();
+          for (var i in lastSeenList) {
+            var status = 'offline';
+            var statusClass = 'user-offline';
+            if (lastSeenList[i].lastSeen > (Date.now()-60000))  {
+              status = 'online';
+              statusClass = 'user-online';
+            }
+
+            var template = Mustache.render(userListEntry, {name:lastSeenList[i].name,
+              color:lastSeenList[i].color, statusClass:statusClass, status:status });
+
+            if ($container.find('#user-'+lastSeenList[i].name).length)
+              $container.find('#user-'+lastSeenList[i].name).html(template);
+            else
+              $container.append(template);
+          }
+        };
 
         var toggle = function() {
           $container.toggle();
@@ -125,13 +154,14 @@ var couchchat = function()  {
         };
 
         return  {
+          init: init,
           toggle: toggle,
           setHeight: setHeight,
           isVisible: isVisible
         };
-      })();
+      })(); /* }}} */
 
-      /* chat messages */
+      /* chat messages {{{ */
       main.messageView = (function() {
         var $container = $('#message-view');
         var $loadMore = $('#load-earlier-messages');
@@ -216,6 +246,10 @@ var couchchat = function()  {
           var nextDay = new Date(dateA.getFullYear(), dateA.getMonth(),
                                  dateA.getDate()+1);
           return nextDay<dateB ? true : false;
+
+          /* better?
+           * if (dateA<dateB && dateA.getDate()<dateB.getDate())
+           */
         };
 
         var onLoadMoreClicked = function(event)  {
@@ -251,9 +285,9 @@ var couchchat = function()  {
           noMoreOldMessages: noMoreOldMessages,
           showError: showError
         };
-      })();
+      })(); /* }}} */
 
-      /* chat message input */
+      /* chat message input {{{ */
       main.messageInput = (function()  {
         var $container = $('#footer');
         var $messageInputField = $('#message-input');
@@ -291,10 +325,11 @@ var couchchat = function()  {
           focus: focus,
           disable: disable
         };
-      })();
+      })(); /* }}} */
 
       main.init = function() {
         this.header.init();
+        this.userList.init();
         this.messageView.init();
         this.settings.init();
         this.messageInput.init();
@@ -321,7 +356,7 @@ var couchchat = function()  {
       };
 
       return main;
-    })();
+    })(); /* }}} */
 
     ui.init = function()  {
       ui.loadingView.hide();
@@ -330,9 +365,9 @@ var couchchat = function()  {
     };
 
     return ui;
-  })(jQuery);
+  })(jQuery); /* }}} */
 
-  /* couchchat.net */
+  /* couchchat.net {{{ */
   var net = (function($) {
     var chatDb = 'couchchat_chat',
         authDb = 'couchchat_auth',
@@ -350,10 +385,9 @@ var couchchat = function()  {
             models.userList.add(resp.userCtx.name, true);
             getInitialMessages(10);
 
-            $.couch.db(chatDb).changes(0, {'filter':'chat/messages'})
-              .onChange(messageListener);
-          }
-          else  {
+            $.couch.db(chatDb).changes(0, {'filter':'chat/messages_userdocs'})
+              .onChange(changeListener);
+          } else  {
             /* user not logged-in */
             redirect(authPath);
           }
@@ -386,6 +420,7 @@ var couchchat = function()  {
               messageController.newRemoteMessage(resp.rows[0].id,
                   resp.rows[0].value);
             } else {
+              /* don't know when this would happen */
               console.log('net.getMessage'+(id)+': total_rows='+resp.total_rows);
             }
           },
@@ -396,6 +431,7 @@ var couchchat = function()  {
       $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time', {
           descending: true, limit: count}, {
           success: function(resp)  {
+            getUserList();
             messageController.init();
             if (resp.total_rows > 0)  {
               /* messages are ordered descending. need to add them ascending */
@@ -432,11 +468,72 @@ var couchchat = function()  {
         error: onNetError});
     };
 
-    var messageListener = function(changes) {
-      var results = changes.results
+    var getUserList = function()  {
+      $.couch.db(chatDb).list('chat/viewGuard', 'user_docs', {}, {
+        success: function(resp) {
+          for (var i in resp.rows)  {
+            models.userList.update(resp.rows[i].key,
+                                   resp.rows[i].value.settings,
+                                   resp.rows[i].value.lastSeen);
+          }
+          if (!models.userList.getPrimary().settings)  {
+            /* user has no doc on server */
+            postUserList();
+          } else {
+            /* update user doc */
+            heartBeat();
+          }
+
+          ui.init();
+          setInterval(heartBeat, 30000);
+        },
+        error: onNetError});
+    };
+
+    var postUserList = function() {
+      $.couch.db(chatDb).update('chat/edit_settings', {
+        settings: models.userList.getPrimary().settings}, {
+        success: function(resp) {
+          models.userList.update(resp.doc._id, resp.doc.settings);
+        },
+        error: onNetError }
+      );
+    };
+
+    var getUserDoc = function(id) {
+      $.couch.db(chatDb).list('chat/viewGuard', 'user_docs', {
+        key: id}, {
+        success: function(resp) {
+          if (resp.total_rows == 1) {
+            models.userList.update(resp.rows[0].key,
+                                   resp.rows[0].value.settings,
+                                   resp.rows[0].value.lastSeen);
+          } else {
+            /* don't know when this would happen */
+            console.log('getUserDoc('+id+'): total_rows='+resp.total_rows);
+          }
+        },
+        error: onNetError }
+      );
+    };
+
+    var changeListener = function(changes) {
+      var results = changes.results;
       for (var i in results)  {
-        messageController.onNewRemoteMessageAvailable(results[i].id);
+        if (models.userList.hasUser(results[i].id))  {
+          /* userdoc change */
+          getUserDoc(results[i].id);
+        } else {
+          /* message change */
+          messageController.onNewRemoteMessageAvailable(results[i].id);
+        }
       }
+    };
+
+    var heartBeat = function()  {
+      var user = models.userList.getPrimary()
+      $.couch.db(chatDb).update('chat/edit_settings/' + user.name, {
+        settings: user.settings});
     };
 
     var getUUID = function()  {
@@ -471,39 +568,84 @@ var couchchat = function()  {
       getOlderMessages: getOlderMessages,
       getUUID: getUUID
     };
-  })(jQuery);
+  })(jQuery); /* }}} */
 
-  /* couchchat.models */
+  /* couchchat.models {{{ */
   var models = (function()  {
-    var User = function(name, primary)  {
+    var User = function(name, primary, settings, lastSeen)  {
       primary = primary === true || false;
       this.name = name;
       this.primary = primary;
+      this.settings = settings;
+      this.lastSeen = new Date(lastSeen);
     };
 
     var userList = (function()  {
       var userList = new Array();
 
-      var add = function(name, primary)  {
-        if (primary)  {
-          for (var i in userList)
-            if (userList[i].primary)
-              return false;
+      var add = function(name, primary, settings, lastSeen) {
+        for (var i in userList) {
+          if (userList[i].name == name) {
+            userList[i].settings = settings;
+            userList[i].lastSeen = new Date(lastSeen);
+            return;
+          }
         }
-        var user = new User(name, primary);
+
+        var user = new User(name, primary, settings, lastSeen);
         userList.push(user);
         return user;
       };
 
+      var update = function(name, settings, lastSeen) {
+        for (var i in userList) {
+          if (userList[i].name == name) {
+            userList[i].settings = settings;
+            userList[i].lastSeen = new Date(lastSeen);
+            return;
+          }
+        }
+        var user = new User(name, false, settings, lastSeen);
+        userList.push(user);
+      };
+
+      /* returns the user this session belongs to */
       var getPrimary = function()  {
         for (var i in userList)
           if (userList[i].primary)
             return userList[i];
       };
 
+      /* checks if there is a user with 'name' in the list */
+      var hasUser = function(name)  {
+        for (var i in userList) {
+          if (userList[i].name == name) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      /* returns an array with {name, lastSeen, color} maps */
+      var getLastSeenList = function()  {
+        var list = new Array();
+        for (var i in userList) {
+          list.push({name:userList[i].name, lastSeen:userList[i].lastSeen,
+                     color:userList[i].settings.color});
+          if (userList[i].primary)  {
+            /* pretty sure the 'primary' user is online right now */
+            list[i].lastSeen = new Date();
+          }
+        }
+        return list;
+      };
+
       return {
         add: add,
+        update: update,
         getPrimary: getPrimary,
+        hasUser: hasUser,
+        getLastSeenList: getLastSeenList
       };
     })();
 
@@ -525,9 +667,9 @@ var couchchat = function()  {
       oldestMessageTime: oldestMessageTime,
       newestMessageTime: newestMessageTime
     };
-  })();
+  })(); /* }}} */
 
-  /* couchchat.messageController */
+  /* couchchat.messageController {{{ */
   var messageController = (function()  {
     var Message;
     var messageMap;
@@ -537,8 +679,6 @@ var couchchat = function()  {
       Message = models.Message;
       messageMap = models.messageMap;
       user = models.userList.getPrimary();
-
-      ui.init();
     };
 
     var newRemoteMessage = function(id, doc) {
@@ -587,7 +727,7 @@ var couchchat = function()  {
       newLocalMessage: newLocalMessage,
       onLocaleMessageAcked: onLocaleMessageAcked
     };
-  })();
+  })(); /* }}} */
 
   /*
    * initial control flow:

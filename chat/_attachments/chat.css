@@ -29,9 +29,20 @@ html, body  {
 }
 
 #user-list  {
+  font-size: 105%;
+  text-align: right;
   margin-left: .5rem;
-  max-width: 15%;
+  max-width: 20%;
+  padding: 1rem 1.5rem;
   display: none;
+}
+.user-online {
+  color: #2CCE20;
+  font-weight: thin;
+}
+.user-offline  {
+  color: #F00;
+  font-weight: thin;
 }
 
 #settings  {
