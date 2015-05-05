@@ -74,7 +74,8 @@ var couchchat = function()  {
 
         var welcomeUser = function() {
           user = models.userList.getPrimary();
-          $container.prepend(Mustache.render(welcomeString, {user:user.name}));
+          $container.prepend(Mustache.render(templates.welcomeString,
+                {user:user.name}));
         }
 
         return  {
@@ -104,7 +105,7 @@ var couchchat = function()  {
 
           /* add pre-defined colors to settings */
           for (var i in config.colors)  {
-            var field = Mustache.render(colorField, {
+            var field = Mustache.render(templates.colorField, {
               id:config.colors[i].replace('#',''), color:config.colors[i]});
             $colorPicker.append(field);
           }
@@ -115,7 +116,7 @@ var couchchat = function()  {
 
           /* add available layouts to select element */
           for (var i in config.layouts) {
-            var option = Mustache.render(layoutOption,
+            var option = Mustache.render(templates.layoutOption,
                 {layout:config.layouts[i]});
             $layoutSelect.append(option);
           }
@@ -184,8 +185,9 @@ var couchchat = function()  {
               statusClass = 'user-online';
             }
 
-            var template = Mustache.render(userListEntry, {name:lastSeenList[i].name,
-              color:lastSeenList[i].color, statusClass:statusClass, status:status });
+            var template = Mustache.render(templates.userListEntry,
+                {name:lastSeenList[i].name, color:lastSeenList[i].color,
+                 statusClass:statusClass, status:status });
 
             if ($container.find('#user-'+lastSeenList[i].name).length)
               $container.find('#user-'+lastSeenList[i].name).html(template);
@@ -238,7 +240,8 @@ var couchchat = function()  {
         };
 
         var addMessage = function(message, isPrimary, isAcked, isOld) {
-          var template = isAcked ? messageBubble : messageBubbleTemporary;
+          var template = isAcked ? templates.messageBubble
+                                 : templates.messageBubbleTemporary;
           var float = isPrimary ? 'u-pull-left' : 'u-pull-right';
           var time = message.time ? formatTime(message.time) : undefined;
           var color = models.userList.getUserColor(message.user);
@@ -255,14 +258,14 @@ var couchchat = function()  {
 
             if (dayTransition(message.time, models.oldestMessageTime))  {
               /* add new-calendar-date indicator after the message */
-              $('#'+message.id).after(Mustache.render(dateLine, {
+              $('#'+message.id).after(Mustache.render(templates.dateLine, {
                 date: formatDate(models.oldestMessageTime)}));
             }
           } else {
             /* add message as last message */
             if (dayTransition(models.newestMessageTime, message.time))  {
               /* add new-calendar-date indicator above the message */
-              $container.append(Mustache.render(dateLine, {
+              $container.append(Mustache.render(templates.dateLine, {
                 date: formatDate(message.time)}));
             }
 
@@ -274,10 +277,10 @@ var couchchat = function()  {
         var messageAcked = function(message) {
           if (dayTransition(models.newestMessageTime, message.time))  {
             /* add new-calendar-date indicator above the message */
-            $('#'+message.id).before(Mustache.render(dateLine,  {
+            $('#'+message.id).before(Mustache.render(templates.dateLine,  {
               date: formatDate(message.time)}));
           }
-          var template = Mustache.render(messageBubble,
+          var template = Mustache.render(templates.messageBubble,
                 {id:message.id, float:'u-float-right', name:message.user,
                  color:models.userList.getPrimary().settings.color,
                  time:formatTime(message.time), message:message.message});
@@ -328,10 +331,10 @@ var couchchat = function()  {
 
         var showError = function(error) {
           if (error == 'sessionError')  {
-            $container.append(sessionError);
+            $container.append(templates.sessionError);
             main.messageInput.disable();
           } else {
-            $container.append(genericError);
+            $container.append(templates.genericError);
           }
           scrollToBottom();
         };
