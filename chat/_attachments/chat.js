@@ -180,7 +180,7 @@ var couchchat = function()  {
           for (var i in lastSeenList) {
             var status = 'offline';
             var statusClass = 'user-offline';
-            if (lastSeenList[i].lastSeen > (Date.now()-60000))  {
+            if (lastSeenList[i].lastSeen > Date.now()-config.markOfflineAfter)  {
               status = 'online';
               statusClass = 'user-online';
             }
@@ -312,7 +312,7 @@ var couchchat = function()  {
 
         var onLoadMoreClicked = function(event)  {
           event.preventDefault();
-          net.getOlderMessages(10);
+          net.getOlderMessages(config.bulkFetchCount);
           $loadMore.find('a').first().hide();
           $loadMore.find('img').first().show();
         };
@@ -434,11 +434,6 @@ var couchchat = function()  {
 
   /* couchchat.net {{{ */
   var net = (function($) {
-    var chatDb = 'couchchat_chat',
-        authDb = 'couchchat_auth',
-        authPath = '/' + authDb + '/_design/auth/_show/landing',
-        newMessagePath = '/' + chatDb + '/_design/chat/_update/new_message';
-
     var init = function() {
       getSession();
     };
@@ -451,11 +446,11 @@ var couchchat = function()  {
             getUserList();
 
             /* register database change listener */
-            $.couch.db(chatDb).changes(0, {'filter':'chat/messages_userdocs'})
+            $.couch.db(config.chatDb).changes(0, {'filter':'chat/messages_userdocs'})
               .onChange(changeListener);
           } else  {
             /* user not logged-in */
-            redirect(authPath);
+            redirect(config.authPath);
           }
         },
         error: onEarlyNetError
@@ -464,12 +459,12 @@ var couchchat = function()  {
 
     var doLogout = function() {
       $.couch.logout({
-        success: redirect(authPath),
+        success: redirect(config.authPath),
         error: onNetError});
     };
 
     var sendMessage = function(message)  {
-      $.couch.db(chatDb).update('chat/new_message', message, {
+      $.couch.db(config.chatDb).update('chat/new_message', message, {
           success: onSendMessageSuccess,
           error: onNetError
         });
@@ -480,7 +475,7 @@ var couchchat = function()  {
     }
 
     var getMessage = function(id) {
-      $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_id', {key:id}, {
+      $.couch.db(config.chatDb).list('chat/viewGuard', 'messages_by_id', {key:id}, {
           success: function(resp) {
             if (resp.total_rows == 1)  {
               messageController.newRemoteMessage(resp.rows[0].id,
@@ -493,9 +488,9 @@ var couchchat = function()  {
           error: onNetError});
     };
 
-    var getInitialMessages = function(count) {
-      $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time', {
-          descending: true, limit: count}, {
+    var getInitialMessages = function() {
+      $.couch.db(config.chatDb).list('chat/viewGuard', 'messages_by_time', {
+          descending: true, limit: config.bulkFetchCount},  {
           success: function(resp)  {
             messageController.init();
             if (resp.total_rows > 0)  {
@@ -507,7 +502,7 @@ var couchchat = function()  {
                 messageController.newRemoteMessage(resp.rows[i].id, doc);
               }
             }
-            if (resp.total_rows < count) {
+            if (resp.total_rows < config.bulkFetchCount) {
               ui.main.messageView.noMoreOldMessages();
             }
           },
@@ -515,10 +510,10 @@ var couchchat = function()  {
       );
     };
 
-    var getOlderMessages = function(count)  {
-      $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time', {
+    var getOlderMessages = function()  {
+      $.couch.db(config.chatDb).list('chat/viewGuard', 'messages_by_time', {
         descending: true, startkey: models.oldestMessageTime.getTime(), skip: 1,
-        limit: count}, {
+        limit: config.bulkFetchCount}, {
         success: function(resp) {
           for (var i in resp.rows) {
             var doc = { message: resp.rows[i].value.message,
@@ -526,7 +521,7 @@ var couchchat = function()  {
                         time: resp.rows[i].key };
             messageController.newRemoteMessage(resp.rows[i].id, doc);
           }
-          if (resp.total_rows < 10) {
+          if (resp.total_rows < config.bulkFetchCount) {
             ui.main.messageView.noMoreOldMessages();
           }
         },
@@ -534,7 +529,7 @@ var couchchat = function()  {
     };
 
     var getUserList = function()  {
-      $.couch.db(chatDb).list('chat/viewGuard', 'user_docs', {}, {
+      $.couch.db(config.chatDb).list('chat/viewGuard', 'user_docs', {}, {
         success: function(resp) {
           for (var i in resp.rows)  {
             models.userList.update(resp.rows[i].key,
@@ -546,7 +541,7 @@ var couchchat = function()  {
             /* user has no doc on server, create one and fetch the list again
              * should only happen on very first request */
             var user = models.userList.getPrimary()
-            $.couch.db(chatDb).update('chat/edit_settings/' + user.name, {}, {
+            $.couch.db(config.chatDb).update('chat/edit_settings/' + user.name, {}, {
               success: getUserList,
               error: onEarlyNetError
             });
@@ -554,10 +549,10 @@ var couchchat = function()  {
           } else {
             /* ping the server regularly, updates the lastVisit field
              * and keeps the sesson alive */
-            heartBeat();
-            setInterval(heartBeat, 30000);
+            heartbeat();
+            setInterval(heartbeat, config.heartbeatFrequency);
 
-            getInitialMessages(10);
+            getInitialMessages();
           }
         },
         error: onEarlyNetError});
@@ -565,14 +560,14 @@ var couchchat = function()  {
 
     var sendUserDoc = function() {
       var user = models.userList.getPrimary().name;
-      $.couch.db(chatDb).update('chat/edit_settings/' + user, {
+      $.couch.db(config.chatDb).update('chat/edit_settings/' + user, {
         settings: models.userList.getPrimary().settings}, {
         error: onNetError }
       );
     };
 
     var getUserDoc = function(id) {
-      $.couch.db(chatDb).list('chat/viewGuard', 'user_docs', {
+      $.couch.db(config.chatDb).list('chat/viewGuard', 'user_docs', {
         key: id}, {
         success: function(resp) {
           if (resp.total_rows == 1) {
@@ -601,13 +596,13 @@ var couchchat = function()  {
       }
     };
 
-    var heartBeat = function()  {
+    var heartbeat = function()  {
       var user = models.userList.getPrimary()
-      $.couch.db(chatDb).update('chat/edit_settings/' + user.name, {});
+      $.couch.db(config.chatDb).update('chat/edit_settings/' + user.name, {});
     };
 
     var getUUID = function()  {
-      return $.couch.newUUID(10);
+      return $.couch.newUUID(config.uuidCacheSize);
     };
 
     var redirect = function(path) {
