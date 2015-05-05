@@ -1,11 +1,19 @@
 var welcomeString = ''
 + '<span id="welcome-message">Welcome {{user}}!</span>';
 
+var colorField = ''
++ '<div id="{{id}}" class="color-field" style="background-color:{{color}};">'
++ '</div>';
+
+var layoutOption = ''
++ '<option>{{layout}}</option>';
+
 var dateLine = ''
 + '<span class="date-line u-cf"><hr>{{date}}<hr></span>';
 
 var messageBubble = ''
-+ '<div id="{{id}}" class="message-bubble u-cf {{float}}">'
++ '<div id="{{id}}" class="message-bubble u-cf {{float}}" '
++   'style=background-color:{{color}} data-couchchat-user="{{name}}">'
 +   '<div class="message-bubble-head">{{name}} ({{time}}):</div>'
 +   '<div class="message-bubble-body">{{message}}</div>'
 + '</div>';

@@ -19,7 +19,7 @@ var couchchat = function()  {
       };
     })(); /* }}} */
 
-    /* error view {{{ */
+    /* ui.errorView {{{ */
     ui.errorView = (function()  {
       var $container = $('#error-view');
       var show = function() {
@@ -32,12 +32,12 @@ var couchchat = function()  {
       };
     })(); /* }}} */
 
-    /* main (chat) view  {{{ */
+    /* ui.main {{{ */
     ui.main = (function()  {
       var main = {};
       var $container = $('#main-view');
 
-      /* chat header {{{ */
+      /* ui.main.header {{{ */
       main.header = (function()  {
         var $container = $('#header');
         var $settingsLink = $('#settings-link');
@@ -83,16 +83,69 @@ var couchchat = function()  {
         };
       })(); /* }}} */
 
-      /* settings view {{{ */
+      /* ui.main.settings {{{ */
       main.settings = (function()  {
         var $container = $('#settings');
+        var $colorPicker = $('#settings-color-picker');
+        var $pickedColor;
+        var $layoutSelect = $('#settings-layout-select');
 
         var init = function() {
-          $('#close-settings-link').click(function(event) {
+          $('#settings-close-link').click(function(event) {
             event.preventDefault();
             toggle();
           });
-        }
+          $('#settings-save-button').click(function(event)  {
+            event.preventDefault();
+            update();
+          });
+
+          var settings = models.userList.getPrimary().settings;
+
+          /* add pre-defined colors to settings */
+          for (var i in config.colors)  {
+            var field = Mustache.render(colorField, {
+              id:config.colors[i].replace('#',''), color:config.colors[i]});
+            $colorPicker.append(field);
+          }
+
+          $pickedColor = $('#'+settings.color.replace('#', ''));
+          $pickedColor.addClass('active-color-field');
+          $('.color-field').click(onColorPick);
+
+          /* add available layouts to select element */
+          for (var i in config.layouts) {
+            var option = Mustache.render(layoutOption,
+                {layout:config.layouts[i]});
+            $layoutSelect.append(option);
+          }
+
+          $layoutSelect.val(settings.layout);
+        };
+
+        var update = function() {
+          var color = '#' + $pickedColor.prop('id');
+          var layout = $layoutSelect.val();
+
+          models.userList.updateSettings(color, layout);
+          main.messageView.onColorChanged(models.userList.getPrimary().name,
+              '#'+$pickedColor.prop('id'));
+          net.sendUserDoc();
+        };
+
+        var onColorPick = function(event) {
+          var $target = $(event.target);
+
+          $pickedColor.removeClass('active-color-field');
+          $target.addClass('active-color-field');
+
+          $pickedColor = $target;
+
+          /* show results immediately */
+          models.userList.updateSettings('#'+$pickedColor.prop('id'));
+          main.messageView.onColorChanged(models.userList.getPrimary().name,
+              '#'+$pickedColor.prop('id'));
+        };
 
         var toggle = function() {
           $container.slideToggle({step:main.scale,done:main.scale});
@@ -111,7 +164,7 @@ var couchchat = function()  {
         };
       })(); /* }}} */
 
-      /* user list view {{{ */
+      /* ui.main.userList {{{ */
       main.userList = (function()  {
         var $container = $('#user-list');
 
@@ -161,7 +214,7 @@ var couchchat = function()  {
         };
       })(); /* }}} */
 
-      /* chat messages {{{ */
+      /* ui.main.messageView  {{{ */
       main.messageView = (function() {
         var $container = $('#message-view');
         var $loadMore = $('#load-earlier-messages');
@@ -188,9 +241,10 @@ var couchchat = function()  {
           var template = isAcked ? messageBubble : messageBubbleTemporary;
           var float = isPrimary ? 'u-pull-left' : 'u-pull-right';
           var time = message.time ? formatTime(message.time) : undefined;
+          var color = models.userList.getUserColor(message.user);
 
           template = Mustache.render(template,
-              {id:message.id, float:float, name:message.user,
+              {id:message.id, float:float, color:color, name:message.user,
                time:time, message:message.message});
 
           if (isOld)  {
@@ -207,7 +261,7 @@ var couchchat = function()  {
           } else {
             /* add message as last message */
             if (dayTransition(models.newestMessageTime, message.time))  {
-              /* add new-calendar-data indicator above the message */
+              /* add new-calendar-date indicator above the message */
               $container.append(Mustache.render(dateLine, {
                 date: formatDate(message.time)}));
             }
@@ -219,12 +273,13 @@ var couchchat = function()  {
 
         var messageAcked = function(message) {
           if (dayTransition(models.newestMessageTime, message.time))  {
-            /* add new-calendar-data indicator above the message */
+            /* add new-calendar-date indicator above the message */
             $('#'+message.id).before(Mustache.render(dateLine,  {
               date: formatDate(message.time)}));
           }
           var template = Mustache.render(messageBubble,
                 {id:message.id, float:'u-float-right', name:message.user,
+                 color:models.userList.getPrimary().settings.color,
                  time:formatTime(message.time), message:message.message});
           $('#'+message.id).replaceWith(template);
         };
@@ -265,6 +320,12 @@ var couchchat = function()  {
           $loadMore.text('No more messages found.');
         };
 
+        var onColorChanged = function(user, color)  {
+          /* select all messages from 'user' and set new color */
+          var $divs = $container.children('div [data-couchchat-user='+user+']');
+          $divs.css('background-color', color);
+        };
+
         var showError = function(error) {
           if (error == 'sessionError')  {
             $container.append(sessionError);
@@ -283,11 +344,12 @@ var couchchat = function()  {
           addMessage: addMessage,
           messageAcked: messageAcked,
           noMoreOldMessages: noMoreOldMessages,
+          onColorChanged: onColorChanged,
           showError: showError
         };
       })(); /* }}} */
 
-      /* chat message input {{{ */
+      /* ui.main.messageInput {{{ */
       main.messageInput = (function()  {
         var $container = $('#footer');
         var $messageInputField = $('#message-input');
@@ -383,8 +445,9 @@ var couchchat = function()  {
         success: function(resp) {
           if (resp.userCtx.name)  {
             models.userList.add(resp.userCtx.name, true);
-            getInitialMessages(10);
+            getUserList();
 
+            /* register database change listener */
             $.couch.db(chatDb).changes(0, {'filter':'chat/messages_userdocs'})
               .onChange(changeListener);
           } else  {
@@ -431,7 +494,6 @@ var couchchat = function()  {
       $.couch.db(chatDb).list('chat/viewGuard', 'messages_by_time', {
           descending: true, limit: count}, {
           success: function(resp)  {
-            getUserList();
             messageController.init();
             if (resp.total_rows > 0)  {
               /* messages are ordered descending. need to add them ascending */
@@ -476,26 +538,32 @@ var couchchat = function()  {
                                    resp.rows[i].value.settings,
                                    resp.rows[i].value.lastSeen);
           }
-          if (!models.userList.getPrimary().settings)  {
-            /* user has no doc on server */
-            postUserList();
-          } else {
-            /* update user doc */
-            heartBeat();
-          }
 
-          ui.init();
-          setInterval(heartBeat, 30000);
+          if (!models.userList.getPrimary().settings)  {
+            /* user has no doc on server, create one and fetch the list again
+             * should only happen on very first request */
+            var user = models.userList.getPrimary()
+            $.couch.db(chatDb).update('chat/edit_settings/' + user.name, {}, {
+              success: getUserList,
+              error: onEarlyNetError
+            });
+            return;
+          } else {
+            /* ping the server regularly, updates the lastVisit field
+             * and keeps the sesson alive */
+            heartBeat();
+            setInterval(heartBeat, 30000);
+
+            getInitialMessages(10);
+          }
         },
-        error: onNetError});
+        error: onEarlyNetError});
     };
 
-    var postUserList = function() {
-      $.couch.db(chatDb).update('chat/edit_settings', {
+    var sendUserDoc = function() {
+      var user = models.userList.getPrimary().name;
+      $.couch.db(chatDb).update('chat/edit_settings/' + user, {
         settings: models.userList.getPrimary().settings}, {
-        success: function(resp) {
-          models.userList.update(resp.doc._id, resp.doc.settings);
-        },
         error: onNetError }
       );
     };
@@ -532,8 +600,7 @@ var couchchat = function()  {
 
     var heartBeat = function()  {
       var user = models.userList.getPrimary()
-      $.couch.db(chatDb).update('chat/edit_settings/' + user.name, {
-        settings: user.settings});
+      $.couch.db(chatDb).update('chat/edit_settings/' + user.name, {});
     };
 
     var getUUID = function()  {
@@ -566,6 +633,7 @@ var couchchat = function()  {
       getMessage: getMessage,
       getInitialMessages: getInitialMessages,
       getOlderMessages: getOlderMessages,
+      sendUserDoc: sendUserDoc,
       getUUID: getUUID
     };
   })(jQuery); /* }}} */
@@ -600,6 +668,11 @@ var couchchat = function()  {
       var update = function(name, settings, lastSeen) {
         for (var i in userList) {
           if (userList[i].name == name) {
+            if (userList[i].settings &&
+                userList[i].settings.color != settings.color) {
+              console.log('color changed');
+              ui.main.messageView.onColorChanged(name, settings.color);
+            }
             userList[i].settings = settings;
             userList[i].lastSeen = new Date(lastSeen);
             return;
@@ -640,12 +713,29 @@ var couchchat = function()  {
         return list;
       };
 
+      var getUserColor = function(name) {
+        for (var i in userList) {
+          if (userList[i].name == name)  {
+            return userList[i].settings.color;
+          }
+        }
+      };
+
+      /* set settings of the primary user */
+      var updateSettings = function(color, layout)  {
+        var settings = getPrimary().settings;
+        settings.color = color || settings.color;
+        settings.layout = layout  || settings.layout;
+      };
+
       return {
         add: add,
         update: update,
         getPrimary: getPrimary,
         hasUser: hasUser,
-        getLastSeenList: getLastSeenList
+        getLastSeenList: getLastSeenList,
+        getUserColor: getUserColor,
+        updateSettings: updateSettings
       };
     })();
 
@@ -679,6 +769,7 @@ var couchchat = function()  {
       Message = models.Message;
       messageMap = models.messageMap;
       user = models.userList.getPrimary();
+      ui.init();
     };
 
     var newRemoteMessage = function(id, doc) {
@@ -731,7 +822,7 @@ var couchchat = function()  {
 
   /*
    * initial control flow:
-   * net.init() -> getSession() -> getInitialMessages() ->
+   * net.init() -> getSession() -> getUserList -> getInitialMessages() ->
    * messageController.init() -> ui.init()
    */
   net.init();

@@ -1,13 +1,23 @@
 function(newDoc, oldDoc, userCtx, secObj) {
+  var config = require('config').config;
 
-  var require = function(field) {
+  var requiredField = function(field) {
     if (!newDoc[field]) {
       throw({forbidden: 'document must have a ' + field});
     }
   };
 
+  var elementInList = function(element, list) {
+    for (var i in list) {
+      if (element == list[i]) {
+        return;
+      }
+    }
+    throw({forbidden: 'invalid value ' + element});
+  };
+
   /* document must have a type */
-  require('type');
+  requiredField('type');
 
   /* there are only two types of documents */
   if (newDoc.type != 'message' && newDoc.type != 'userdoc' ) {
@@ -21,9 +31,9 @@ function(newDoc, oldDoc, userCtx, secObj) {
       throw({forbidden: 'messages can not be modified'});
     }
 
-    require('message');
-    require('user');
-    require('time');
+    requiredField('message');
+    requiredField('user');
+    requiredField('time');
 
     if (newDoc.user != userCtx.name)  {
       throw({forbidden: 'uncool dude!'});
@@ -33,14 +43,17 @@ function(newDoc, oldDoc, userCtx, secObj) {
   /* user document validation */
   if (newDoc.type == 'userdoc') {
 
-    require('settings');
-    require('lastSeen');
+    requiredField('settings');
+    requiredField('lastSeen');
 
     if (newDoc.settings.length != 2 &&
         !newDoc.settings.color &&
         !newDoc.settings.layout)  {
       throw({forbidden: 'invalid settings field'});
     }
+
+    elementInList(newDoc.settings.color, config.colors);
+    elementInList(newDoc.settings.layout, config.layouts);
 
     if (newDoc._id != userCtx.name)  {
       /* id has to be equal to user name */

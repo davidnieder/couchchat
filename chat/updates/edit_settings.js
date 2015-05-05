@@ -1,10 +1,18 @@
 function(doc, req)  {
-  var defaults = {
-    layout: 'bubbles',
-    color: '#94CB54'
-  };
-  var settings = doc ? doc.settings : defaults;
+  var settings;
   var body = JSON.parse(req.body);
+
+  if (!doc) {
+    var config = require('config').config;
+    var color = parseInt(Math.random() * config.colors.length);
+
+    var settings = {
+      layout: config.layouts[0],
+      color: config.colors[color]
+    };
+  } else {
+    settings = doc.settings;
+  }
 
   if (doc)  {
     doc['settings'] = body.settings || settings;

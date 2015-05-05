@@ -48,6 +48,27 @@ html, body  {
 #settings  {
   display: none;
 }
+#settings * {
+  margin-bottom: .4rem;
+}
+#settings label {
+  font-size: 92%;
+}
+#settings input, select {
+  height: 30px;
+  line-height: 30px;
+  padding: 0 6px;
+  min-width: 80%;
+}
+.color-field  {
+  width: 26px;
+  height: 26px;
+  display: inline-block;
+  border: 2px solid transparent;
+}
+.active-color-field {
+  border: 2px solid #000;
+}
 
 #main-view  {
   display: none;
@@ -79,17 +100,14 @@ html, body  {
   margin-bottom: .6rem;
   max-width: 60%;
 
-  /*background-color: #F7E285;*/
-  /*background-color: #94CB54;*/
-  /*background-color: #FC4E4E;*/
-  background-color: #E8875A;
 }
 .message-bubble-head {
   font-size: 90%;
   line-height: 100%;
 }
 .message-bubble-body {
-  font-size: 105%;
+  font-size: 102%;
+  font-weight: 600;
 }
 .message-not-acked  {
   background-color: #DCDCDC;

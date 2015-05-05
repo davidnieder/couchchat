@@ -36,8 +36,21 @@
         </div>
 
         <div id="settings" class="row element-container">
-          <span class="u-pull-right"><a href="#" id="close-settings-link">close</a></span>
-          <span><p>settings: coming soon &hellip;</p></span>
+          <span class="u-pull-right"><a href="#" id="settings-close-link">Close</a></span>
+          <form>
+            <div id="settings-color-picker" class="three columns">
+              <label>Color:</label>
+            </div>
+            <div class="two columns">
+              <label for="settings-layout-select">Layout:</label>
+              <select id="settings-layout-select" class="u-full-width">
+              </select>
+            </div>
+            <div class="two columns">
+              <label for="settings-save-button">&nbsp;</label>
+              <input type="submit" id="settings-save-button" class="button-primary" value="Save">
+            </div>
+          </form>
         </div>
 
         <div id="user-list" class="row element-container u-pull-right">
@@ -52,10 +65,10 @@
 
         <div id="footer" class="row element-container">
           <form>
-            <input type="text" id="message-input" autocomplete="off"
+            <input type="text" id="message-input" class="u-full-width" autocomplete="off"
               placeholder="Write a message or paste a url &hellip;">
             <input type="submit" id="message-send" value="Send"
-              class="button-primary u-pull-right">
+              class="button-primary  u-pull-right">
           </form>
         </div>
       </div>
@@ -65,6 +78,7 @@
   <script src="jquery.min.js"></script>
   <script src="jquery.couch.custom.js"></script>
   <script src="mustache.js"></script>
+  <script src="config.js"></script>
   <script src="templates.js"></script>
   <script src="chat.js"></script>
   <script>$(document).ready(couchchat);</script>
