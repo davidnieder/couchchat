@@ -109,6 +109,9 @@ html, body  {
   font-size: 102%;
   font-weight: 600;
 }
+.message-bubble-body a  {
+  color: #000;
+}
 .message-not-acked  {
   background-color: #DCDCDC;
 }
