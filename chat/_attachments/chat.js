@@ -220,12 +220,9 @@ var couchchat = function()  {
       main.messageView = (function() {
         var $container = $('#message-view');
         var $loadMore = $('#load-earlier-messages');
-        var autolinker;
 
         var init = function() {
           $loadMore.find('a').first().click(onLoadMoreClicked);
-          autolinker = new Autolinker({phone:false,twitter:false,
-            hashtag:false});
         };
 
         var getHeight = function(outerHeight) {
@@ -252,7 +249,9 @@ var couchchat = function()  {
           template = Mustache.render(template,
               {id:message.id, float:float, color:color, name:message.user,
                time:time, message:message.message});
-          template = autolinker.link(template);
+
+          if (isAcked)
+            template = autoEmbed(template);
 
           if (isOld)  {
             /* add message as first message */
@@ -275,6 +274,10 @@ var couchchat = function()  {
 
             $container.append(template);
             scrollToBottom();
+
+            if (template.indexOf('</iframe>') != -1) {
+              $(window).resize();
+            }
           }
         };
 
@@ -288,8 +291,12 @@ var couchchat = function()  {
                 {id:message.id, float:'u-float-right', name:message.user,
                  color:models.userList.getPrimary().settings.color,
                  time:formatTime(message.time), message:message.message});
-          template = autolinker.link(template);
+          template = autoEmbed(template);
           $('#'+message.id).replaceWith(template);
+
+          if (template.indexOf('</iframe>') != -1) {
+            $(window).resize();
+          }
         };
 
         /* returns 'HH:MM' locale time */
@@ -487,7 +494,7 @@ var couchchat = function()  {
                   resp.rows[0].value);
             } else {
               /* don't know when this would happen */
-              console.log('net.getMessage'+(id)+': total_rows='+resp.total_rows);
+              console.log('net.getMessage('+id+'): total_rows='+resp.total_rows);
             }
           },
           error: onNetError});

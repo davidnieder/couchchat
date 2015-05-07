@@ -16,6 +16,11 @@ function(newDoc, oldDoc, userCtx, secObj) {
     throw({forbidden: 'invalid value ' + element});
   };
 
+  /* give admins admin rights ;) */
+  if (userCtx.roles.indexOf('_admin') != -1)  {
+    return;
+  }
+
   /* document must have a type */
   requiredField('type');
 
