@@ -18,6 +18,18 @@
   $.couch = $.couch || {};
   /** @lends $.couch */
 
+  /**
+   * @private
+   */
+  function encodeDocId(docID) {
+    var parts = docID.split("/");
+    if (parts[0] == "_design") {
+      parts.shift();
+      return "_design/" + encodeURIComponent(parts.join('/'));
+    }
+    return encodeURIComponent(docID);
+  }
+
   var uuidCache = [];
 
   $.extend($.couch, {
@@ -209,6 +221,48 @@
           return promise;
         },
 
+        saveDoc: function(doc, options) {
+          options = options || {};
+          var db = this;
+          var beforeSend = fullCommit(options);
+          if (doc._id === undefined) {
+            var method = "POST";
+            var uri = this.uri;
+          } else {
+            var method = "PUT";
+            var uri = this.uri + encodeDocId(doc._id);
+          }
+          var versioned = maybeApplyVersion(doc);
+          return $.ajax({
+            type: method, url: uri + encodeOptions(options),
+            contentType: "application/json",
+            dataType: "json", data: toJSON(doc),
+            beforeSend : beforeSend,
+            complete: function(req) {
+              var resp = $.parseJSON(req.responseText);
+              if (req.status == 200 || req.status == 201 || req.status == 202) {
+                doc._id = resp.id;
+                doc._rev = resp.rev;
+                if (versioned) {
+                  db.openDoc(doc._id, {
+                    attachPrevRev : true,
+                    success : function(d) {
+                      doc._attachments = d._attachments;
+                      if (options.success) options.success(resp);
+                    }
+                  });
+                } else {
+                  if (options.success) options.success(resp);
+                }
+              } else if (options.error) {
+                options.error(req.status, resp.error, resp.reason);
+              } else {
+                throw "The document could not be saved: " + resp.reason;
+              }
+            }
+          });
+        },
+
         list: function(list, view, options, ajaxOptions) {
           var list = list.split('/');
           var options = options || {};
@@ -323,6 +377,21 @@
         }
       }
     }, obj), ajaxOptions));
+  }
+
+  /**
+   * @private
+   */
+  function fullCommit(options) {
+    var options = options || {};
+    if (typeof options.ensure_full_commit !== "undefined") {
+      var commit = options.ensure_full_commit;
+      delete options.ensure_full_commit;
+      return function(xhr) {
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader("X-Couch-Full-Commit", commit.toString());
+      };
+    }
   }
 
   /**
