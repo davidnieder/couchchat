@@ -221,6 +221,25 @@
           return promise;
         },
 
+        allDocs: function(options) {
+          var type = "GET";
+          var data = null;
+          if (options["keys"]) {
+            type = "POST";
+            var keys = options["keys"];
+            delete options["keys"];
+            data = toJSON({ "keys": keys });
+          }
+          return ajax({
+              type: type,
+              data: data,
+              url: this.uri + "_all_docs" + encodeOptions(options)
+            },
+            options,
+            "An error occurred retrieving a list of all documents"
+          );
+        },
+
         saveDoc: function(doc, options) {
           options = options || {};
           var db = this;
@@ -261,6 +280,18 @@
               }
             }
           });
+        },
+
+        removeDoc: function(doc, options) {
+          return ajax({
+              type: "DELETE",
+              url: this.uri +
+                   encodeDocId(doc._id) +
+                   encodeOptions({rev: doc._rev})
+            },
+            options,
+            "The document could not be deleted"
+          );
         },
 
         list: function(list, view, options, ajaxOptions) {

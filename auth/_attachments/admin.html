@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Admin - CouchChat</title>
+
+    <link rel="stylesheet" href="normalize.css" type="text/css">
+    <link rel="stylesheet" href="skeleton.css" type="text/css">
+    <link rel="stylesheet" href="auth.css" type="text/css">
+    <style>
+      table { width: 100%; display: none }
+    </style>
+
+    <script src="jquery.min.js"></script>
+    <script src="jquery.couch.custom.js"></script>
+    <script src="mustache.js"></script>
+    <script src="admin.js"></script>
+    <script id="table-row" type="x-mustache-template">
+      <tr id="user-{{name}}">
+        <td>{{name}}</td>
+        <td class="{{statusClass}}">{{status}}</td>
+        <td><a data-user-id="{{id}}" href="#">{{link}}</a></td>
+        <td><a data-user-id="{{id}}" href="#">delete</a></td>
+      </tr>
+    </script>
+  </head>
+  <body>
+    <div id="container" class="container">
+      <div id="no-javascript">
+        <noscript>
+          This application requires javascript.
+        </noscript>
+      </div>
+
+      <div id="admin-view" class="row login-view">
+        <div class="offset-by-three six columns">
+          <h4>Administration</h4>
+          <div id="error" class="login-error"></div>
+          <div id="user-list">
+            <table id="user-table">
+              <thead>
+                <tr>
+                  <th>Name</th><th>Status</th><th colspan="2">Change</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </body>
+  <script>
+    $(document).ready(function() {
+      couchchat.admin.init();
+      couchchat.admin.show();
+    });
+  </script>
+</html>
