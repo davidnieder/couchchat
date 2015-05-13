@@ -59,7 +59,6 @@ var autoEmbed = (function() {
         $iframe.width(width);
         $iframe.height(width*aspectRation);
       });
-      console.log('resize');
     }, 100);
   };
   $(window).resize(scaleIframe);

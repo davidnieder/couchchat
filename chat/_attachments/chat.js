@@ -680,7 +680,6 @@ var couchchat = function()  {
           if (userList[i].name == name) {
             if (userList[i].settings &&
                 userList[i].settings.color != settings.color) {
-              console.log('color changed');
               ui.main.messageView.onColorChanged(name, settings.color);
             }
             userList[i].settings = settings;
