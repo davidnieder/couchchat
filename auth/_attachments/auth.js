@@ -156,6 +156,7 @@ var setPosition = function($container, divider) {
   var $container;
   var $statusMessage;
   var $status = {};
+  var $landingLink;
 
   var showStatus = function(data, status, jqXHR)  {
     if (data.ok)  {
@@ -166,6 +167,7 @@ var setPosition = function($container, divider) {
         if (data.userCtx.roles.indexOf('couchchat:user') != -1) {
           $status.role.html('valid-user');
           $status.role.addClass('happy-state');
+          $landingLink.show();
         } else {
           $status.role.html('activation-pending');
           $status.role.addClass('sad-state');
@@ -190,6 +192,7 @@ var setPosition = function($container, divider) {
       $status.login = $('#status-login');
       $status.username = $('#status-username');
       $status.role = $('#status-userrole');
+      $landingLink = $('#landing-link');
       $.couch.session({success:showStatus,error:showStatus});
 
     },
