@@ -48,8 +48,14 @@ function(newDoc, oldDoc, userCtx, secObj) {
   /* user document validation */
   if (newDoc.type == 'userdoc') {
 
+    requiredField('name');
     requiredField('settings');
     requiredField('lastSeen');
+
+    if (newDoc.name != userCtx.name) {
+      /* name must be equal to name in _users db */
+      throw({forbidden: 'invalid name field'});
+    }
 
     if (newDoc.settings.length != 2 &&
         !newDoc.settings.color &&
@@ -60,8 +66,8 @@ function(newDoc, oldDoc, userCtx, secObj) {
     elementInList(newDoc.settings.color, config.colors);
     elementInList(newDoc.settings.layout, config.layouts);
 
-    if (newDoc._id != userCtx.name)  {
-      /* id has to be equal to user name */
+    if (newDoc._id != config.userDocPrefix+userCtx.name)  {
+      /* id has to be equal to prefix + username */
       throw({forbidden: 'invalid doc id'});
     }
 

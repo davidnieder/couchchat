@@ -21,8 +21,9 @@ function(doc, req)  {
 
   } else {
     var newDoc = {
-      _id: req.userCtx.name,
+      _id: config.userDocPrefix + req.userCtx.name,
       type: 'userdoc',
+      name: req.userCtx.name,
       settings: body.settings || settings,
       lastSeen: Date.now()
     };
