@@ -357,7 +357,9 @@ var couchchat = function()  {
 
         var showError = function(error) {
           if (error == 'sessionError')  {
-            $container.append(templates.sessionError);
+            if ($('#session-error-msg').length > 0) return;
+            $container.append(Mustache.render(templates.sessionError,
+                  {url:config.authPath}));
             main.messageInput.disable();
           } else {
             $container.append(templates.genericError);
@@ -650,7 +652,10 @@ var couchchat = function()  {
     };
 
     var onNetError = function(status, error, reason) {
-      if (status == 403)  {
+      if (status == 401)  {
+        /* unauthorized */
+        events.trigger('net:error', 'sessionError');
+      } else if (status == 403)  {
         /* forbidden */
         events.trigger('net:error', 'sessionError');
       }

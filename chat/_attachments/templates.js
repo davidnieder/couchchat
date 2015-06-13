@@ -32,9 +32,9 @@ var templates = {
     + '</div>',
   
   sessionError: ''
-    + '<div class="u-cf error-message">'
+    + '<div id="session-error-msg" class="u-cf error-message">'
     +   'Your session timed out. '
-    +   '<a href="">Log back in.</a>'
+    +   '<a href="{{ url }}">Log back in.</a>'
     + '</div>',
   
   genericError: ''
