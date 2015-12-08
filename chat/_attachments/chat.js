@@ -65,6 +65,41 @@ var couchchat = function()  {
       };
     })(); /* }}} */
 
+    /* ui.notifications {{{ */
+    var notifications = (function()  {
+      var isVisible = true;
+      var windowTitle;
+      var newMessageSound = new Audio(config.sounds.newMessage);
+      var messageCounter = 0;
+
+      var init = function() {
+        windowTitle = document.title;
+
+        events.on('new-message', onNewMessage);
+        $(window).focus(onFocus);
+        $(window).focus(function() { isVisible = true; });
+        $(window).blur(function() { isVisible = false; });
+      };
+
+      var onNewMessage = function() {
+        if (!isVisible) {
+          messageCounter++;
+          document.title = '(' + messageCounter + ') ' + windowTitle;
+
+          newMessageSound.play();
+        }
+      };
+
+      var onFocus = function()  {
+        messageCounter = 0;
+        document.title = windowTitle;
+      };
+
+      return {
+        init: init,
+      };
+    })(); /* }}} */
+
     /* ui.main {{{ */
     var main = (function()  {
       var main = {};
@@ -452,6 +487,7 @@ var couchchat = function()  {
 
     var init = function()  {
       errorView.init();
+      notifications.init();
       main.init();
 
       events.on('net:initialized', show);
@@ -815,6 +851,10 @@ var couchchat = function()  {
 
         ui.main.messageView.addMessage(msg, isPrimary, true,
             msg.time<newestMessage.time);
+
+        if (!isPrimary && msg.time == newestMessage.time) {
+          events.trigger('new-message');
+        }
       };
 
       var onNewRemoteMessageAvailable = function(id) {
