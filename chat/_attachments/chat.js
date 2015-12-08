@@ -834,10 +834,16 @@ var couchchat = function()  {
         return msg;
       };
 
-      /* checks if B has a greater date than A */
+      /* checks if one or more calendar days have passed between A and B */
       var dayTransition = function(dateA, dateB)  {
+        // TODO don't fail silently
         if (!(dateA && dateB)) return false;
-        return dateA<dateB && dateA.getDate()<dateB.getDate()
+
+        dateA = Date.UTC(dateA.getFullYear(), dateA.getMonth(), dateA.getDate());
+        dateB = Date.UTC(dateB.getFullYear(), dateB.getMonth(), dateB.getDate());
+        var days = Math.floor(Math.abs(dateA-dateB)/1000/60/60/24);
+
+        return days >= 1;
       };
 
       var setTime = function(msgId, time) {
