@@ -358,7 +358,13 @@ var couchchat = function()  {
         var scrollToBottom = function() {
           $container.clearQueue();
           $container.animate({scrollTop: $container.prop('scrollHeight')},
-                      'slow');
+              'slow');
+
+          /* loading of embeded content can disrupt above animation
+           * set scroll position a second time after timeout */
+          setTimeout(function() {
+            $container.scrollTop($container.prop('scrollHeight'));
+          }, 3000);
         };
 
         var noMoreOldMessages = function()  {
